@@ -1,7 +1,7 @@
 // tmp36_node.js
 
 var serialport = require("serialport");
-var portName = "COM3"; // check your COM port!!
+var portName = "COM4"; // check your COM port!!
 var port = process.env.PORT || 3000;
 
 var io = require("socket.io").listen(port);
@@ -25,18 +25,36 @@ sp.on("open", () => {
 });
 
 var dStr = "";
-var tdata = []; // Array
+var readData="";
+var temp = "";
+var humi = "";
+var lux = "";
+var mdata = []; // Array
+var firstcommaidx = 0;
+var secondcommaidx = 0;
 
 parser.on("data", (data) => {
   // call back when data is received
-  // raw data only
-  //console.log(data);
+  readData = data.toString();
+  firstcommaidx = readData.indexOf(",");
+  secondcommaidx = readData.indexOf(",",firstcommaidx + 1);
+  if(firstcommaidx > 0) {
+    lux = readData.substring(0, firstcommaidx);
+    humi = readData.substring(firstcommaidx + 1, secondcommaidx);
+    temp = readData.substring(secondcommaidx + 1),
+    readData = "";
+
 
   dStr = getDateString();
-  tdata[0] = dStr;
-  tdata[1] = data; // data
-  console.log("AA06," + tdata.toString());
-  io.sockets.emit("message", tdata); // send data to all clients
+  mdata[0] = dStr; // date
+  mdata[1] = lux; // data
+  mdata[2] = humi;
+  mdata[3] = temp;
+  console.log("AA04," + mdata.toString());
+  io.sockets.emit("message", mdata); // send data to all clients
+} else {
+    console.log(readData);
+}
 });
 
 io.sockets.on("connection", function (socket) {
